@@ -13,6 +13,7 @@
 )]
 
 mod apps;
+mod defaults;
 mod previews;
 mod recent;
 
@@ -71,6 +72,8 @@ struct Launcher {
     exe_dir: PathBuf,
     recent: Vec<recent::Recent>,
     message: Option<String>,
+    /// The window that asks before the programs are made the defaults is showing.
+    ask_defaults: bool,
 }
 
 impl Launcher {
@@ -90,6 +93,7 @@ impl Launcher {
             exe_dir,
             recent,
             message: None,
+            ask_defaults: false,
         }
     }
 
@@ -155,7 +159,7 @@ impl Launcher {
         }
     }
 
-    fn header(&self, ui: &mut egui::Ui) {
+    fn header(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             ui.vertical(|ui| {
                 ui.label(
@@ -170,7 +174,74 @@ impl Launcher {
                         .color(DIM),
                 );
             });
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
+                let button = egui::Button::new(
+                    RichText::new("Imposta come programmi predefiniti").color(TEXT),
+                )
+                .fill(CARD)
+                .stroke(Stroke::new(1.0, BORDER));
+                if ui.add_sized([250.0, 32.0], button).clicked() {
+                    self.ask_defaults = true;
+                }
+            });
         });
+    }
+
+    /// The window that explains what making the programs the defaults does, and does it.
+    fn defaults_window(&mut self, ctx: &egui::Context) {
+        if !self.ask_defaults {
+            return;
+        }
+        let mut close = false;
+        let mut go = false;
+        egui::Window::new("Programmi predefiniti")
+            .collapsible(false)
+            .resizable(false)
+            .anchor(Align2::CENTER_CENTER, vec2(0.0, -30.0))
+            .show(ctx, |ui| {
+                ui.set_width(430.0);
+                ui.label("I file si apriranno con i programmi del pacchetto:");
+                ui.add_space(6.0);
+                for kind in Kind::ALL {
+                    let types: Vec<String> = kind.extensions().iter().map(|e| format!(".{e}")).collect();
+                    ui.horizontal_wrapped(|ui| {
+                        ui.label(RichText::new(kind.name()).strong().color(accent_text(kind)));
+                        ui.label(RichText::new(types.join("  ")).color(DIM));
+                    });
+                }
+                ui.add_space(8.0);
+                ui.label(RichText::new("Windows chiede di confermare la scelta: si apre la pagina «App predefinite», dove puoi controllare e approvare i tre programmi.").color(DIM));
+                ui.add_space(10.0);
+                ui.horizontal(|ui| {
+                    if ui.add(egui::Button::new(RichText::new("Imposta").color(Color32::WHITE)).fill(accent_text(Kind::Word)).min_size(vec2(100.0, 30.0))).clicked() {
+                        go = true;
+                    }
+                    if ui.add(egui::Button::new("Annulla").min_size(vec2(90.0, 30.0))).clicked() {
+                        close = true;
+                    }
+                });
+            });
+        if go {
+            let dir = self.exe_dir.clone();
+            self.message = Some(match defaults::apply(|k| apps::find_exe(k, &dir)) {
+                Ok(o) if o.missing.is_empty() => {
+                    "Fatto. Conferma i tre programmi nella pagina «App predefinite» di Windows."
+                        .to_string()
+                }
+                Ok(o) => {
+                    let names: Vec<&str> = o.missing.iter().map(|k| k.name()).collect();
+                    format!(
+                        "Registrati i programmi trovati. Mancano: {}. Mettili accanto a DocPlane e riprova.",
+                        names.join(", ")
+                    )
+                }
+                Err(e) => e,
+            });
+            close = true;
+        }
+        if close {
+            self.ask_defaults = false;
+        }
     }
 
     fn card(&mut self, ui: &mut egui::Ui, kind: Kind, size: egui::Vec2) {
@@ -396,6 +467,7 @@ impl eframe::App for Launcher {
                 }
                 self.recent_list(ui);
             });
+        self.defaults_window(&ui.ctx().clone());
     }
 }
 

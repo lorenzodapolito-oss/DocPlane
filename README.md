@@ -19,6 +19,10 @@ ognuno con la sua anteprima, il suo nome e a cosa serve.
   SheetCalc.it; `.pptx`, `.odp`… in Flickdeck.
 - **Trascina un file sulla finestra** e si apre nel programma giusto.
 - **File recenti**: l'elenco dei file aperti da DocPlane (gli ultimi 12). Un clic li riapre.
+- **Imposta come programmi predefiniti** (in alto a destra, solo Windows): registra WordBook.it,
+  SheetCalc.it e Flickdeck per i loro tipi di file, senza bisogno di essere amministratore, e apre la
+  pagina «App predefinite» di Windows. Windows 10 e 11 vogliono la conferma dell'utente per cambiare
+  un programma predefinito: lì si controllano e si approvano i tre programmi.
 - Se un programma non è accanto a DocPlane, la scheda dice «non trovato».
 
 DocPlane cerca i programmi nella sua stessa cartella (`WordBook.it.exe`, `SheetCalc.it.exe`,
