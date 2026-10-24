@@ -79,5 +79,14 @@ Hunspell della lingua (per esempio `fr_FR.aff` e `fr_FR.dic`). Scaricarli senza 
 
 ## Licenza
 
-MIT OR Apache-2.0. L'icona e le anteprime sono disegnate nel codice e sono originali. Vedi
+MIT OR Apache-2.0. Le anteprime dei programmi sono disegnate nel codice; le icone sono opera di Lorenzo D'Apolito. Vedi
 [ATTRIBUTION.md](ATTRIBUTION.md).
+
+## Scarica
+
+**[Scarica DocPlane.it per Windows (zip)](https://github.com/lorenzodapolito-oss/DocPlane/releases/latest/download/DocPlane.it.zip)**
+· [tutte le versioni](https://github.com/lorenzodapolito-oss/DocPlane/releases)
+
+Decomprimi lo zip in una cartella e apri `DocPlane.it.exe`. Al primo avvio Windows può mostrare
+«Windows ha protetto il PC» (i programmi non sono firmati): scegli *Ulteriori informazioni*,
+poi *Esegui comunque*.
