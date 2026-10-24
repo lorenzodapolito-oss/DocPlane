@@ -23,11 +23,16 @@ if errorlevel 1 goto :fail
 call :build Flickdeck Flickdeck flickdeck flickdeck.exe Flickdeck.it.exe
 if errorlevel 1 goto :fail
 
+rem Le cartelle vuote non entrano nello zip: ognuna ha un file LEGGIMI.txt.
 rem Modalita' portatile: ogni programma tiene le impostazioni in una cartella accanto a se'.
 mkdir "%DIST%\docplane-data"
+echo Impostazioni di questo programma (modalita portatile).> "%DIST%\docplane-data\LEGGIMI.txt"
 mkdir "%DIST%\sheetcalc-data"
+echo Impostazioni di questo programma (modalita portatile).> "%DIST%\sheetcalc-data\LEGGIMI.txt"
 mkdir "%DIST%\wordbook-data"
+echo Impostazioni di questo programma (modalita portatile).> "%DIST%\wordbook-data\LEGGIMI.txt"
 mkdir "%DIST%\flickdeck-data"
+echo Impostazioni di questo programma (modalita portatile).> "%DIST%\flickdeck-data\LEGGIMI.txt"
 type nul > "%DIST%\portable.txt"
 
 echo === Dizionari ===
