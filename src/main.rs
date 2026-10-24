@@ -14,6 +14,7 @@
 
 mod apps;
 mod defaults;
+mod dictionaries;
 mod previews;
 mod recent;
 
@@ -27,7 +28,7 @@ use std::path::{Path, PathBuf};
 const OWNER: &str = "Lorenzo D'Apolito";
 
 fn app_title() -> String {
-    format!("DocPlane di {OWNER}")
+    format!("DocPlane.it di {OWNER}")
 }
 
 // The soft palette: ivory, with powder blue, sage and apricot for the three programs.
@@ -74,6 +75,8 @@ struct Launcher {
     message: Option<String>,
     /// The window that asks before the programs are made the defaults is showing.
     ask_defaults: bool,
+    /// The dictionaries are being downloaded: the channel tells how it ends.
+    downloading: Option<std::sync::mpsc::Receiver<Result<(), String>>>,
 }
 
 impl Launcher {
@@ -94,6 +97,7 @@ impl Launcher {
             recent,
             message: None,
             ask_defaults: false,
+            downloading: None,
         }
     }
 
@@ -115,7 +119,7 @@ impl Launcher {
             ));
             return;
         };
-        match apps::launch(&exe, file) {
+        match apps::launch(&exe, file, Some(&dictionaries::folder(&self.exe_dir))) {
             Ok(()) => {
                 self.message = None;
                 if let Some(f) = file {
@@ -163,7 +167,7 @@ impl Launcher {
         ui.horizontal(|ui| {
             ui.vertical(|ui| {
                 ui.label(
-                    RichText::new("DocPlane")
+                    RichText::new("DocPlane.it")
                         .font(FontId::proportional(34.0))
                         .strong()
                         .color(TEXT),
@@ -329,6 +333,57 @@ impl Launcher {
         }
     }
 
+    /// The dictionaries row: what is installed, and the button that downloads them.
+    fn dictionaries_row(&mut self, ui: &mut egui::Ui) {
+        let dir = dictionaries::folder(&self.exe_dir);
+        let finished = self.downloading.as_ref().and_then(|rx| rx.try_recv().ok());
+        if let Some(result) = finished {
+            self.downloading = None;
+            self.message = Some(match result {
+                Ok(()) => "Dizionari scaricati: i tre programmi li usano subito.".to_string(),
+                Err(e) => format!("Download dei dizionari non riuscito: {e}"),
+            });
+        }
+        let busy = self.downloading.is_some();
+        if busy {
+            ui.ctx()
+                .request_repaint_after(std::time::Duration::from_millis(300));
+        }
+        ui.horizontal(|ui| {
+            ui.label(
+                RichText::new("Dizionari")
+                    .font(FontId::proportional(18.0))
+                    .strong()
+                    .color(TEXT),
+            );
+            ui.label(RichText::new(dictionaries::summary(&dir)).color(DIM));
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                let all = dictionaries::LANGUAGES.iter().all(|l| {
+                    let s = dictionaries::status(&dir, l);
+                    s.spelling && s.thesaurus
+                });
+                let label = if busy {
+                    "Download in corso…"
+                } else if all {
+                    "Aggiorna i dizionari"
+                } else {
+                    "Scarica i dizionari"
+                };
+                if ui
+                    .add_enabled(!busy, egui::Button::new(label).min_size(vec2(170.0, 28.0)))
+                    .clicked()
+                {
+                    let (tx, rx) = std::sync::mpsc::channel();
+                    self.downloading = Some(rx);
+                    std::thread::spawn(move || {
+                        let _ = tx.send(dictionaries::download(&dir, &mut |_| {}));
+                    });
+                }
+            });
+        });
+        ui.add_space(14.0);
+    }
+
     fn recent_list(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             ui.label(
@@ -465,6 +520,7 @@ impl eframe::App for Launcher {
                     ui.label(RichText::new(m).color(Color32::from_rgb(0x9A, 0x3B, 0x2E)));
                     ui.add_space(8.0);
                 }
+                self.dictionaries_row(ui);
                 self.recent_list(ui);
             });
         self.defaults_window(&ui.ctx().clone());
@@ -475,7 +531,38 @@ fn icon() -> Option<egui::IconData> {
     eframe::icon_data::from_png_bytes(include_bytes!("../assets/docplane-256.png")).ok()
 }
 
+/// `DocPlane.it.exe --scarica-dizionari [cartella]`: download the dictionaries without opening the
+/// window (the package script uses it). Exits 0 on success, 1 otherwise.
+fn download_from_command_line(args: &[String]) -> Option<i32> {
+    if args.first().map(String::as_str) != Some("--scarica-dizionari") {
+        return None;
+    }
+    let dir = match args.get(1) {
+        Some(d) => PathBuf::from(d),
+        None => {
+            let exe_dir = std::env::current_exe()
+                .ok()
+                .and_then(|p| p.parent().map(Path::to_path_buf))
+                .unwrap_or_else(|| PathBuf::from("."));
+            dictionaries::folder(&exe_dir)
+        }
+    };
+    Some(
+        match dictionaries::download(&dir, &mut |name| eprintln!("scarico {name}…")) {
+            Ok(()) => 0,
+            Err(e) => {
+                eprintln!("{e}");
+                1
+            }
+        },
+    )
+}
+
 fn main() -> eframe::Result {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if let Some(code) = download_from_command_line(&args) {
+        std::process::exit(code);
+    }
     let mut viewport = egui::ViewportBuilder::default()
         .with_title(app_title())
         .with_inner_size([1040.0, 680.0])
@@ -490,7 +577,7 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "DocPlane",
+        "DocPlane.it",
         options,
         Box::new(|cc| {
             cc.egui_ctx.set_theme(egui::ThemePreference::Light);

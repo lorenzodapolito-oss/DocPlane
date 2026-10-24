@@ -8,17 +8,17 @@ fn main() {
     }
     let mut res = winresource::WindowsResource::new();
     res.set_icon("assets/docplane.ico")
-        .set("ProductName", "DocPlane")
+        .set("ProductName", "DocPlane.it")
         .set(
             "FileDescription",
-            "DocPlane: videoscrittura, foglio di calcolo e presentazione",
+            "DocPlane.it: videoscrittura, foglio di calcolo e presentazione",
         )
         .set("CompanyName", "Lorenzo D'Apolito")
         .set(
             "LegalCopyright",
             "Copyright (c) Lorenzo D'Apolito. MIT OR Apache-2.0.",
         )
-        .set("OriginalFilename", "DocPlane.exe")
+        .set("OriginalFilename", "DocPlane.it.exe")
         .set("InternalName", "docplane");
     if let Err(e) = res.compile() {
         println!("cargo:warning=docplane.exe built without icon/version resources: {e}");

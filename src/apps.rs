@@ -19,7 +19,7 @@ impl Kind {
         match self {
             Kind::Word => "WordBook.it",
             Kind::Sheet => "SheetCalc.it",
-            Kind::Slides => "Flickdeck",
+            Kind::Slides => "Flickdeck.it",
         }
     }
 
@@ -56,14 +56,17 @@ impl Kind {
             (Kind::Word, false) => &["WordBook.it", "wordbook"],
             (Kind::Sheet, true) => &["SheetCalc.it.exe", "gridcraft.exe"],
             (Kind::Sheet, false) => &["SheetCalc.it", "gridcraft"],
-            (Kind::Slides, true) => &["Flickdeck.exe", "flickdeck.exe"],
-            (Kind::Slides, false) => &["Flickdeck", "flickdeck"],
+            (Kind::Slides, true) => &["Flickdeck.it.exe", "Flickdeck.exe", "flickdeck.exe"],
+            (Kind::Slides, false) => &["Flickdeck.it", "Flickdeck", "flickdeck"],
         }
     }
 
     /// Folders next to DocPlane that may hold the program instead of DocPlane's own folder.
-    fn folders(self) -> [&'static str; 1] {
-        [self.name()]
+    fn folders(self) -> Vec<&'static str> {
+        match self {
+            Kind::Slides => vec!["Flickdeck.it", "Flickdeck"],
+            _ => vec![self.name()],
+        }
     }
 }
 
@@ -86,9 +89,13 @@ pub fn find_exe(kind: Kind, dir: &Path) -> Option<PathBuf> {
 }
 
 /// Start `exe`, optionally with a file to open. The program runs on its own: closing DocPlane
-/// does not close it.
-pub fn launch(exe: &Path, file: Option<&Path>) -> Result<(), String> {
+/// does not close it. `dictionaries` is the shared dictionaries folder, handed over so the program
+/// finds it wherever it is installed.
+pub fn launch(exe: &Path, file: Option<&Path>, dictionaries: Option<&Path>) -> Result<(), String> {
     let mut cmd = Command::new(exe);
+    if let Some(d) = dictionaries {
+        cmd.env("DOCPLANE_DICTIONARIES", d);
+    }
     if let Some(dir) = exe.parent() {
         cmd.current_dir(dir);
     }
@@ -143,7 +150,7 @@ mod tests {
         let name = Kind::Word.exe_names()[0];
         std::fs::write(dir.join(name), b"").unwrap();
         assert_eq!(find_exe(Kind::Word, &dir), Some(dir.join(name)));
-        let sub = dir.join("Flickdeck");
+        let sub = dir.join("Flickdeck.it");
         std::fs::create_dir_all(&sub).unwrap();
         let slides = Kind::Slides.exe_names()[0];
         std::fs::write(sub.join(slides), b"").unwrap();
@@ -153,6 +160,6 @@ mod tests {
 
     #[test]
     fn a_missing_program_is_an_error_not_a_panic() {
-        assert!(launch(Path::new("/non/esiste/docplane-test"), None).is_err());
+        assert!(launch(Path::new("/non/esiste/docplane-test"), None, None).is_err());
     }
 }

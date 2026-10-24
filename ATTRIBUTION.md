@@ -6,5 +6,5 @@ Non contengono risorse di Microsoft, Adobe, Avid o Autodesk.
 
 | File | Autore | Origine | Licenza | Uso |
 |---|---|---|---|---|
-| `assets/docplane-1024.png`, `assets/docplane-256.png`, `assets/docplane.ico` | Lorenzo D'Apolito | disegnata con uno script (Pillow): tre fogli colorati sovrapposti | MIT OR Apache-2.0 | Icona dell'app |
+| `assets/docplane-1024.png`, `assets/docplane-256.png`, `assets/docplane.ico` | Lorenzo D'Apolito | fornita dal proprietario del repository (2026-10-24): foglio bianco con una D su fondo blu notte e la scritta DocPlane; angoli resi trasparenti, ridimensionata con Pillow | MIT OR Apache-2.0 | Icona dell'app |
 | `docs/docplane.png` | Lorenzo D'Apolito | schermata di DocPlane | MIT OR Apache-2.0 | README |

@@ -1,38 +1,44 @@
 @echo off
-rem Crea il pacchetto DocPlane per Windows: scarica (o aggiorna) WordBook.it, SheetCalc.it e
-rem Flickdeck, compila i tre programmi e DocPlane, li mette insieme in dist\DocPlane e crea
-rem dist\DocPlane.zip. Va lanciato con Rust e il compilatore C gia' nel PATH.
+rem Crea il pacchetto DocPlane.it per Windows: scarica (o aggiorna) WordBook.it, SheetCalc.it e
+rem Flickdeck.it, compila i tre programmi e DocPlane.it, li mette insieme in dist\DocPlane.it,
+rem scarica i dizionari (italiano e inglese) e crea dist\DocPlane.it.zip. Va lanciato con Rust e il compilatore C gia' nel PATH.
 rem Le cartelle dei programmi stanno accanto a quella di DocPlane.
 setlocal
 cd /d "%~dp0\..\.."
 set "ROOT=%CD%"
 for %%I in ("%ROOT%\..") do set "BASE=%%~fI"
-set "DIST=%ROOT%\dist\DocPlane"
+set "DIST=%ROOT%\dist\DocPlane.it"
 if exist "%DIST%" rmdir /s /q "%DIST%"
 mkdir "%DIST%"
 
-echo === DocPlane ===
+echo === DocPlane.it ===
 cargo build --release -p docplane
 if errorlevel 1 goto :fail
-copy /Y target\release\docplane.exe "%DIST%\DocPlane.exe" >nul
+copy /Y target\release\docplane.exe "%DIST%\DocPlane.it.exe" >nul
 
 call :build Wordbook.it wordbook.it wordcraft wordbook.exe WordBook.it.exe
 if errorlevel 1 goto :fail
 call :build SheetCalc.it-src SheetCalc.it gridcraft gridcraft.exe SheetCalc.it.exe
 if errorlevel 1 goto :fail
-call :build Flickdeck Flickdeck flickdeck flickdeck.exe Flickdeck.exe
+call :build Flickdeck Flickdeck flickdeck flickdeck.exe Flickdeck.it.exe
 if errorlevel 1 goto :fail
 
 rem Modalita' portatile: ogni programma tiene le impostazioni in una cartella accanto a se'.
 mkdir "%DIST%\docplane-data"
+mkdir "%DIST%\sheetcalc-data"
 mkdir "%DIST%\wordbook-data"
 mkdir "%DIST%\flickdeck-data"
 type nul > "%DIST%\portable.txt"
 
-powershell -NoProfile -Command "Compress-Archive -Path '%DIST%\*' -DestinationPath '%ROOT%\dist\DocPlane.zip' -Force"
+echo === Dizionari ===
+rem DocPlane.it e' un programma a finestre: start /wait aspetta che finisca.
+start /wait "" "%DIST%\DocPlane.it.exe" --scarica-dizionari "%DIST%\dictionaries"
+if errorlevel 1 echo ATTENZIONE: i dizionari non sono stati scaricati. Si possono scaricare dopo da DocPlane.it.
+
+powershell -NoProfile -Command "Compress-Archive -Path '%DIST%\*' -DestinationPath '%ROOT%\dist\DocPlane.it.zip' -Force"
 echo.
-echo Fatto: %DIST%\DocPlane.exe
-echo Zip:   %ROOT%\dist\DocPlane.zip
+echo Fatto: %DIST%\DocPlane.it.exe
+echo Zip:   %ROOT%\dist\DocPlane.it.zip
 exit /b 0
 
 :fail
