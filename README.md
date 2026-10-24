@@ -63,7 +63,7 @@ Poi, nel Prompt dei comandi, dalla cartella di DocPlane.it:
 packaging\windows\Crea-pacchetto.bat
 ```
 
-Lo script scarica o aggiorna i tre programmi (cartelle accanto a quella di DocPlane.it), li compila
+Lo script scarica o aggiorna i tre programmi (cartelle dentro quella di DocPlane: `Wordbook.it`, `SheetCalc.it-src`, `Flickdeck`), li compila
 scarica i dizionari e crea `dist\DocPlane.it\` e `dist\DocPlane.it.zip`. La prima volta richiede circa un'ora.
 
 Solo DocPlane.it, senza il resto: `cargo build --release -p docplane`.

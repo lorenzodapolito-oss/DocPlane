@@ -2,11 +2,11 @@
 rem Crea il pacchetto DocPlane.it per Windows: scarica (o aggiorna) WordBook.it, SheetCalc.it e
 rem Flickdeck.it, compila i tre programmi e DocPlane.it, li mette insieme in dist\DocPlane.it,
 rem scarica i dizionari (italiano e inglese) e crea dist\DocPlane.it.zip. Va lanciato con Rust e il compilatore C gia' nel PATH.
-rem Le cartelle dei programmi stanno accanto a quella di DocPlane.
+rem Le cartelle dei programmi stanno dentro quella di DocPlane.
 setlocal
 cd /d "%~dp0\..\.."
 set "ROOT=%CD%"
-for %%I in ("%ROOT%\..") do set "BASE=%%~fI"
+set "BASE=%ROOT%"
 set "DIST=%ROOT%\dist\DocPlane.it"
 if exist "%DIST%" rmdir /s /q "%DIST%"
 mkdir "%DIST%"
